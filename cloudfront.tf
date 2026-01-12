@@ -22,6 +22,33 @@ module "cdn" {
     # a take var.oidc
   }
 
+  default_cache_behavior = {
+    target_origin_id           = var.s3_bucket_name
+    allowed_methods            = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods             = ["GET", "HEAD"]
+    response_headers_policy_id = local.custom_headers ? aws_cloudfront_response_headers_policy.this[0].id : null
+    # verify?
+    forwarded_values = {
+      query_string = false
+      cookies = {
+        forward = length(var.oidc) == 0 ? "none" : "all"
+      }
+    }
+
+    viewer_protocol_policy = "redirect-to-https"
+    min_ttl                = var.min_ttl
+    default_ttl            = var.default_ttl
+    max_ttl                = var.max_ttl
+
+    lambda_function_association = module.oidc.lambda_edge_function_arn == null ? {} : {
+      viewer-request = {
+        lambda_arn   = module.oidc.lambda_edge_function_arn
+        include_body = false
+      }
+    }
+
+  }
+
   # TODO: dynamic custom_error_response
   # TODO: default_cache_behavior
   # TODO: dynamic ordered_cache_behavior 2x ruzna pro var.oidc a var.proxy_paths
