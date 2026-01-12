@@ -109,38 +109,3 @@ module "gitlab" {
   aws_default_region             = data.aws_region.current.name
   aws_env_vars_suffix            = var.aws_env_vars_suffix
 }
-
-moved {
-  from = gitlab_project_variable.s3_bucket[0]
-  to   = module.gitlab[0].gitlab_project_variable.s3_bucket
-}
-
-moved {
-  from = gitlab_project_variable.cloudfront_distribution_id[0]
-  to   = module.gitlab[0].gitlab_project_variable.cloudfront_distribution_id
-}
-
-moved {
-  from = gitlab_project_variable.site_aws_access_key_id[0]
-  to   = module.gitlab[0].gitlab_project_variable.site_aws_access_key_id
-}
-
-moved {
-  from = gitlab_project_variable.site_aws_secret_access_key[0]
-  to   = module.gitlab[0].gitlab_project_variable.site_aws_secret_access_key
-}
-
-moved {
-  from = aws_iam_access_key.deploy
-  to   = aws_iam_access_key.deploy[0]
-}
-
-moved {
-  from = aws_iam_access_key.deploy
-  to   = aws_iam_access_key.deploy[0]
-}
-
-moved {
-  from = aws_iam_user.deploy
-  to   = aws_iam_user.deploy[0]
-}

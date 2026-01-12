@@ -40,18 +40,6 @@ module "certificate" {
   tags = local.tags
 }
 
-resource "aws_cloudfront_origin_access_control" "this" {
-  name                              = "Access from CF to S3 - ${local.main_domain}"
-  description                       = "Access from CF to S3 - ${local.main_domain}"
-  origin_access_control_origin_type = "s3"
-  signing_behavior                  = "always"
-  signing_protocol                  = "sigv4"
-}
-
-resource "aws_cloudfront_origin_access_identity" "this" {
-  comment = "Deprecated: Access from CF to S3 - ${local.main_domain} - Superseeded by OAC"
-}
-
 data "aws_iam_policy_document" "s3_bucket_policy" {
   override_policy_documents = [
     var.s3_bucket_policy,
