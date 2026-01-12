@@ -12,10 +12,10 @@ module "cdn" {
 
   origin = {
     s3_bucket = {
-      domain_name              = module.s3_bucket.s3_bucket_bucket_regional_domain_name
-      origin_id                = var.s3_bucket_name
-      origin_path              = var.origin_path
-      origin_access_control_id = "s3"
+      domain_name               = module.s3_bucket.s3_bucket_bucket_regional_domain_name
+      origin_id                 = var.s3_bucket_name
+      origin_path               = var.origin_path
+      origin_access_control_key = "s3"
     }
     # TODO: tady budou dalsi dynamicky originy 
     # iterovany for/for_each nad var.proxy.paths
