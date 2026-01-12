@@ -1,0 +1,67 @@
+module "cdn" {
+  source  = "terraform-aws-modules/cloudfront/aws"
+  version = "6.0.2"
+
+  enabled             = true
+  is_ipv6_enabled     = true
+  price_class         = var.price_class
+  default_root_object = "index.html"
+
+  aliases = concat(var.domains, keys(var.extra_domains))
+  comment = local.main_domain
+
+  origin = {
+    s3_bucket = {
+      domain_name              = module.s3_bucket.s3_bucket_bucket_regional_domain_name
+      origin_id                = var.s3_bucket_name
+      origin_access_control_id = aws_cloudfront_origin_access_control.this.id
+      origin_path              = var.origin_path
+    }
+    # TODO: tady budou dalsi dynamicky originy 
+    # iterovany for/for_each nad var.proxy.paths
+    # a take var.oidc
+  }
+
+  # TODO: dynamic custom_error_response
+  # TODO: default_cache_behavior
+  # TODO: dynamic ordered_cache_behavior 2x ruzna pro var.oidc a var.proxy_paths
+  # TODO: dynamic logging_config
+  #
+  origin_access_control = {
+    "Access from CF to S3 - ${local.main_domain}" = {
+      description      = "Access from CF to S3 - ${local.main_domain}"
+      origin_type      = "s3"
+      signing_behavior = "always"
+      signing_protocol = "sigv4"
+    }
+  }
+
+  restrictions = {
+    geo_restriction = {
+      restriction_type = var.restriction_type
+      locations        = var.restrictions_locations
+    }
+  }
+
+  viewer_certificate = {
+    cloudfront_default_certificate = false
+    acm_certificate_arn            = module.certificate.acm_certificate_arn
+    ssl_support_method             = "sni-only"
+    minimum_protocol_version       = "TLSv1.2_2018"
+  }
+
+  web_acl_id = var.waf_acl_arn
+
+  tags = local.tags
+}
+
+# TODO: aws_cloudfront_response_headers_policy
+# TODO: DATA aws_cloudfront_origin_request_policy
+# TODO: DATA aws_cloudfront_cache_policy
+# TODO: aws_cloudfront_cache_policy pro var.oidc
+# TODO: aws_cloudfront_origin_request_policy pro var.oidc
+
+moved {
+  from = aws_cloudfront_distribution.this
+  to   = module.cdn.aws_cloudfront_distribution.this
+}

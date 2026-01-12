@@ -52,7 +52,7 @@ data "aws_iam_policy_document" "s3_bucket_policy" {
     ]
 
     resources = [
-      "arn:aws:s3:::${var.s3_bucket_name}/*",
+      "${module.s3_bucket.s3_bucket_arn}/*",
     ]
 
     principals {
@@ -66,7 +66,7 @@ data "aws_iam_policy_document" "s3_bucket_policy" {
     condition {
       test     = "StringEquals"
       variable = "AWS:SourceArn"
-      values   = [aws_cloudfront_distribution.this.arn]
+      values   = [module.cdn.cloudfront_distribution_arn] # OK
     }
   }
 }
@@ -170,7 +170,7 @@ data "aws_iam_policy_document" "kms_key_policy" {
       variable = "AWS:SourceArn"
 
       values = [
-        aws_cloudfront_distribution.this.arn
+        module.cdn.cloudfront_distribution_arn # OK
       ]
     }
   }
@@ -266,15 +266,18 @@ resource "aws_cloudfront_origin_request_policy" "oidc" {
 }
 
 resource "aws_cloudfront_distribution" "this" {
-  comment = local.main_domain
+  # DONE
+  #comment = local.main_domain
 
-  web_acl_id = var.waf_acl_arn
-  origin {
-    domain_name              = module.s3_bucket.s3_bucket_bucket_regional_domain_name
-    origin_id                = var.s3_bucket_name
-    origin_access_control_id = aws_cloudfront_origin_access_control.this.id
-    origin_path              = var.origin_path
-  }
+  # DONE
+  # web_acl_id = var.waf_acl_arn
+  # DONE
+  #origin {
+  #  domain_name              = module.s3_bucket.s3_bucket_bucket_regional_domain_name
+  #  origin_id                = var.s3_bucket_name
+  #  origin_access_control_id = aws_cloudfront_origin_access_control.this.id
+  #  origin_path              = var.origin_path
+  #}
 
   dynamic "origin" {
     for_each = length(var.oidc) == 0 ? [] : [1]
@@ -308,11 +311,15 @@ resource "aws_cloudfront_distribution" "this" {
     }
   }
 
-  aliases = concat(var.domains, keys(var.extra_domains))
+  #Done
+  #aliases = concat(var.domains, keys(var.extra_domains))
 
-  enabled             = true
-  is_ipv6_enabled     = true
-  default_root_object = "index.html"
+  # DONE
+  #enabled             = true
+  # DONE
+  #is_ipv6_enabled     = true
+  # DONE
+  #default_root_object = "index.html"
 
   dynamic "custom_error_response" {
     for_each = length(var.oidc) > 0 ? [] : [
@@ -422,21 +429,21 @@ resource "aws_cloudfront_distribution" "this" {
     }
   }
 
-  price_class = var.cloudfront_price_class
+  # DONE
+  #restrictions {
+  #  geo_restriction {
+  #    restriction_type = var.restriction_type
+  #    locations        = var.restrictions_locations
+  #  }
+  #}
 
-  restrictions {
-    geo_restriction {
-      restriction_type = var.restriction_type
-      locations        = var.restrictions_locations
-    }
-  }
-
-  viewer_certificate {
-    cloudfront_default_certificate = false
-    acm_certificate_arn            = module.certificate.acm_certificate_arn
-    ssl_support_method             = "sni-only"
-    minimum_protocol_version       = "TLSv1.2_2018"
-  }
+  # DONE
+  #viewer_certificate {
+  #  cloudfront_default_certificate = false
+  #  acm_certificate_arn            = module.certificate.acm_certificate_arn
+  #  ssl_support_method             = "sni-only"
+  #  minimum_protocol_version       = "TLSv1.2_2018"
+  #}
 
   dynamic "logging_config" {
     for_each = var.logs_bucket_domain_name == null ? [] : [1]
@@ -448,7 +455,8 @@ resource "aws_cloudfront_distribution" "this" {
     }
   }
 
-  tags = local.tags
+  # DONE
+  #tags = local.tags
 }
 
 resource "aws_route53_record" "this" {
@@ -459,8 +467,8 @@ resource "aws_route53_record" "this" {
   type    = "A"
 
   alias {
-    name                   = aws_cloudfront_distribution.this.domain_name
-    zone_id                = aws_cloudfront_distribution.this.hosted_zone_id
+    name                   = module.cdn.cloudfront_distribution_domain_name
+    zone_id                = module.cdn.cloudfront_distribution_hosted_zone_id
     evaluate_target_health = false
   }
 }
@@ -473,8 +481,8 @@ resource "aws_route53_record" "extra" {
   type    = "A"
 
   alias {
-    name                   = aws_cloudfront_distribution.this.domain_name
-    zone_id                = aws_cloudfront_distribution.this.hosted_zone_id
+    name                   = module.cdn.cloudfront_distribution_domain_name
+    zone_id                = module.cdn.cloudfront_distribution_hosted_zone_id
     evaluate_target_health = false
   }
 }
@@ -574,19 +582,4 @@ resource "aws_cloudfront_response_headers_policy" "this" {
     }
   }
 
-}
-
-moved {
-  from = aws_kms_key.this
-  to   = aws_kms_key.this[0]
-}
-
-moved {
-  from = aws_kms_alias.this
-  to   = aws_kms_alias.this[0]
-}
-
-moved {
-  from = aws_kms_key_policy.this
-  to   = aws_kms_key_policy.this[0]
 }

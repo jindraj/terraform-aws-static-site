@@ -3,7 +3,8 @@ output "aws_s3_bucket_name" {
 }
 
 output "aws_cloudfront_distribution_id" {
-  value = aws_cloudfront_distribution.this.id
+  value = module.cdn.cloudfront_distribution_id
+  #value = aws_cloudfront_distribution.this.id
 }
 
 output "aws_access_key_id" {

@@ -78,7 +78,7 @@ data "aws_iam_policy_document" "deploy" {
       "cloudfront:ListInvalidations",
       "cloudfront:GetInvalidation"
     ]
-    resources = [aws_cloudfront_distribution.this.arn]
+    resources = [module.cdn.cloudfront_distribution_arn]
   }
 }
 
@@ -102,10 +102,10 @@ module "gitlab" {
   enable_deploy_user             = var.enable_deploy_user
   extra_gitlab_cicd_variables    = var.extra_gitlab_cicd_variables
   aws_s3_bucket_name             = module.s3_bucket.s3_bucket_id
-  aws_cloudfront_distribution_id = aws_cloudfront_distribution.this.id
+  aws_cloudfront_distribution_id = module.cdn.cloudfront_distribution_id
   aws_role_arn                   = var.enable_deploy_role ? aws_iam_role.deploy[0].arn : null
   aws_access_key_id              = var.enable_deploy_user ? aws_iam_access_key.deploy[0].id : null
   aws_secret_access_key          = var.enable_deploy_user ? aws_iam_access_key.deploy[0].secret : null
-  aws_default_region             = data.aws_region.current.name
+  aws_default_region             = data.aws_region.current.region
   aws_env_vars_suffix            = var.aws_env_vars_suffix
 }
