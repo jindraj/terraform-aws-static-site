@@ -14,7 +14,7 @@ module "cdn" {
     s3_bucket = {
       domain_name              = module.s3_bucket.s3_bucket_bucket_regional_domain_name
       origin_id                = var.s3_bucket_name
-      origin_access_control_id = aws_cloudfront_origin_access_control.this.id
+      #origin_access_control_id = aws_cloudfront_origin_access_control.this.id
       origin_path              = var.origin_path
     }
     # TODO: tady budou dalsi dynamicky originy 
