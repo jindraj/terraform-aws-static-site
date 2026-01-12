@@ -55,7 +55,7 @@ module "cdn" {
   # TODO: dynamic logging_config
   #
   origin_access_control = {
-    "Access from CF to S3 - ${local.main_domain}" = {
+    s3 = {
       description      = "Access from CF to S3 - ${local.main_domain}"
       origin_type      = "s3"
       signing_behavior = "always"
@@ -90,5 +90,9 @@ module "cdn" {
 
 moved {
   from = aws_cloudfront_distribution.this
-  to   = module.cdn.aws_cloudfront_distribution.this
+  to   = module.cdn.aws_cloudfront_distribution.this[0]
+}
+moved {
+  from = aws_cloudfront_origin_access_control.this
+  to   = module.cdn.aws_cloudfront_origin_access_control.this["s3"]
 }
