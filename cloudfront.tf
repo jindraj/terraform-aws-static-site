@@ -12,7 +12,6 @@ module "cdn" {
 
   origin = {
     s3_bucket = {
-      name                     = "Access from CF to S3 - ${local.main_domain}"
       domain_name              = module.s3_bucket.s3_bucket_bucket_regional_domain_name
       origin_id                = var.s3_bucket_name
       origin_path              = var.origin_path
@@ -58,6 +57,7 @@ module "cdn" {
   #
   origin_access_control = {
     s3 = {
+      name             = "Access from CF to S3 - ${local.main_domain}"
       description      = "Access from CF to S3 - ${local.main_domain}"
       origin_type      = "s3"
       signing_behavior = "always"
@@ -98,11 +98,3 @@ moved {
   from = aws_cloudfront_origin_access_control.this
   to   = module.cdn.aws_cloudfront_origin_access_control.this["s3"]
 }
-resource "aws_cloudfront_origin_access_control" "this" {
-  name                              = "Access from CF to S3 - ${local.main_domain}"
-  description                       = "Access from CF to S3 - ${local.main_domain}"
-  origin_access_control_origin_type = "s3"
-  signing_behavior                  = "always"
-  signing_protocol                  = "sigv4"
-}
-
