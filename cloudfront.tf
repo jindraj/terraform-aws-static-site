@@ -4,11 +4,19 @@ module "cdn" {
 
   enabled             = true
   is_ipv6_enabled     = true
-  price_class         = var.price_class
+  price_class         = var.cloudfront_price_class
   default_root_object = "index.html"
 
   aliases = concat(var.domains, keys(var.extra_domains))
   comment = local.main_domain
+
+  origin_access_control = {
+    name                              = "Access from CF to S3 - ${local.main_domain}"
+    description                       = "Access from CF to S3 - ${local.main_domain}"
+    origin_access_control_origin_type = "s3"
+    signing_behavior                  = "always"
+    signing_protocol                  = "sigv4"
+  }
 
   origin = {
     s3_bucket = {
