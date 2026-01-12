@@ -12,10 +12,10 @@ module "cdn" {
 
   origin = {
     s3_bucket = {
-      domain_name              = module.s3_bucket.s3_bucket_bucket_regional_domain_name
-      origin_id                = var.s3_bucket_name
-      #origin_access_control_id = aws_cloudfront_origin_access_control.this.id
-      origin_path              = var.origin_path
+      name        = "Access from CF to S3 - ${local.main_domain}"
+      domain_name = module.s3_bucket.s3_bucket_bucket_regional_domain_name
+      origin_id   = var.s3_bucket_name
+      origin_path = var.origin_path
     }
     # TODO: tady budou dalsi dynamicky originy 
     # iterovany for/for_each nad var.proxy.paths
@@ -27,6 +27,7 @@ module "cdn" {
     allowed_methods            = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
     cached_methods             = ["GET", "HEAD"]
     response_headers_policy_id = local.custom_headers ? aws_cloudfront_response_headers_policy.this[0].id : null
+    compress                   = true
     # verify?
     forwarded_values = {
       query_string = false
