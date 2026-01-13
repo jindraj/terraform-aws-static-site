@@ -85,8 +85,7 @@ data "aws_iam_policy_document" "deploy" {
 resource "aws_iam_user_policy" "deploy" {
   count = var.enable_deploy_user ? 1 : 0
 
-  user = aws_iam_user.deploy[0].name
-
+  user   = aws_iam_user.deploy[0].name
   policy = data.aws_iam_policy_document.deploy[0].json
 }
 
@@ -98,14 +97,49 @@ module "gitlab" {
   gitlab_project_ids = local.gitlab_project_ids
   gitlab_environment = var.gitlab_environment
 
-  enable_deploy_role             = var.enable_deploy_role
-  enable_deploy_user             = var.enable_deploy_user
-  extra_gitlab_cicd_variables    = var.extra_gitlab_cicd_variables
-  aws_s3_bucket_name             = module.s3_bucket.s3_bucket_id
-  aws_cloudfront_distribution_id = module.cdn.cloudfront_distribution_id
-  aws_role_arn                   = var.enable_deploy_role ? aws_iam_role.deploy[0].arn : null
-  aws_access_key_id              = var.enable_deploy_user ? aws_iam_access_key.deploy[0].id : null
-  aws_secret_access_key          = var.enable_deploy_user ? aws_iam_access_key.deploy[0].secret : null
-  aws_default_region             = data.aws_region.current.region
-  aws_env_vars_suffix            = var.aws_env_vars_suffix
+  #enable_deploy_role             = var.enable_deploy_role
+  #enable_deploy_user             = var.enable_deploy_user
+  #extra_gitlab_cicd_variables    = var.extra_gitlab_cicd_variables
+  #aws_s3_bucket_name             = module.s3_bucket.s3_bucket_id
+  #aws_cloudfront_distribution_id = module.cdn.cloudfront_distribution_id
+  #aws_role_arn                   = var.enable_deploy_role ? aws_iam_role.deploy[0].arn : null
+  #aws_access_key_id              = var.enable_deploy_user ? aws_iam_access_key.deploy[0].id : null
+  #aws_secret_access_key          = var.enable_deploy_user ? aws_iam_access_key.deploy[0].secret : null
+  #aws_default_region             = data.aws_region.current.region
+  #aws_env_vars_suffix            = var.aws_env_vars_suffix
+
+  extra_gitlab_cicd_variables = concat(
+    [
+      {
+        key   = "AWS_S3_BUCKET${var.aws_env_vars_suffix}"
+        value = module.s3_bucket.s3_bucket_id
+      },
+      {
+        key   = "AWS_DEFAULT_REGION${var.aws_env_vars_suffix}"
+        value = data.aws_region.current.region
+      },
+      {
+        key   = "AWS_CF_DISTRIBUTION_ID${var.aws_env_vars_suffix}"
+        value = module.cdn.cloudfront_distribution_id
+      },
+    ],
+    var.enable_deploy_role ? [
+      { # CONDITIONAL
+        key   = "AWS_ROLE_ARN${var.aws_env_vars_suffix}"
+        value = aws_iam_role.deploy[0].arn
+      }
+    ] : [],
+    var.enable_deploy_user ? [
+      { # CONDITIONAL
+        key   = "AWS_ACCESS_KEY_ID${var.aws_env_vars_suffix}"
+        value = aws_iam_access_key.deploy[0].id
+      },
+      { # CONDITIONAL
+        key    = "AWS_SECRET_ACCESS_KEY${var.aws_env_vars_suffix}"
+        value  = aws_iam_access_key.deploy[0].secret
+        masked = true
+      },
+    ] : [],
+    var.extra_gitlab_cicd_variables
+  )
 }

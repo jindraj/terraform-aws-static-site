@@ -1,0 +1,2 @@
+- merge `{min,max,default}_ttl` variables into single map variable ttl = { min = …, max = …, default = }
+- merge? domains, domain_zone_id and extra_domains for aws_route53_record and certificate creation
