@@ -33,19 +33,61 @@ output "oidc_callback_url" {
 }
 
 output "route53_moved_blocks" {
-  value = join("\n\n", 
+  value       = "Run following output through `sed -i s/PLACEHOLDER/YOUR_MODULE_NAME/` to generate moved blocks\n\n${join("\n\n", 
     [
       for d, _ in var.extra_domains :
       <<EOF
 moved {
-  from = aws_route53_record.extra["${d}"]
-  to   = aws_route53_record.this["${d}"]
+  from = module.PLACEHOLDER.aws_route53_record.extra["${d}"]
+  to   = module.PLACEHOLDER.aws_route53_record.this["${d}"]
 }
 EOF
     ]
-  )
+  )}"
+}
+
+locals {
+  gitlab_moved_blocks = join("\n\n", flatten([
+    for p in var.gitlab_project_ids : [
+      <<EOF
+moved {
+  from = module.PLACEHOLDER.module.gitlab[0].gitlab_project_variable.cloudfront_distribution_id["${p}"]
+  to   = module.PLACEHOLDER.module.gitlab[0].gitlab_project_variable.this["${p}-AWS_CF_DISTRIBUTION_ID"]
+}
+EOF
+      ,
+      <<EOF
+moved {
+  from = module.PLACEHOLDER.module.gitlab[0].gitlab_project_variable.aws_default_region["${p}"]
+  to   = module.PLACEHOLDER.module.gitlab[0].gitlab_project_variable.this["${p}-AWS_DEFAULT_REGION"]
+}
+EOF
+      ,
+      <<EOF
+moved {
+  from = module.PLACEHOLDER.module.gitlab[0].gitlab_project_variable.s3_bucket["${p}"]
+  to   = module.PLACEHOLDER.module.gitlab[0].gitlab_project_variable.this["${p}-AWS_S3_BUCKET"]
+}
+EOF
+      ,
+      <<EOF
+moved {
+  from = module.PLACEHOLDER.module.gitlab[0].gitlab_project_variable.site_aws_access_key_id["${p}"]
+  to   = module.PLACEHOLDER.module.gitlab[0].gitlab_project_variable.this["${p}-AWS_ACCESS_KEY_ID"]
+}
+EOF
+      ,
+      <<EOF
+moved {
+  from = module.PLACEHOLDER.module.gitlab[0].gitlab_project_variable.site_aws_secret_access_key["${p}"]
+  to   = module.PLACEHOLDER.module.gitlab[0].gitlab_project_variable.this["${p}-AWS_SECRET_ACCESS_KEY"]
+}
+EOF
+    ]
+  ]))
 }
 
 output "moved_blocks_gitlab_project_variables" {
-  value = try(module.gitlab[0].moved_blocks_gitlab_project_variables, "")
+  value       = "Run following output through `sed -i s/PLACEHOLDER/YOUR_MODULE_NAME/` to generate moved blocks\n\n${local.gitlab_moved_blocks}"
+  description = "Copy/paste these moved blocks into the root module to avoid recreation."
 }
