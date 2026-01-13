@@ -148,7 +148,7 @@ variable "cache_ttl" {
   description = "Cache TTLs configuration for CloudFront distribition; sets minimum/maximum and default amount of time the objects stays in cache"
   type = object({
     min     = optional(number, 0)
-    max     = optional(number, 864000)
+    max     = optional(number, 86400)
     default = optional(number, 3600)
   })
   default = {}
