@@ -10,6 +10,21 @@ module "cdn" {
   aliases = concat(var.domains, keys(var.extra_domains))
   comment = local.main_domain
 
+  custom_error_response = length(var.oidc) > 0 ? [] : [
+    {
+      error_caching_min_ttl = 3000
+      error_code            = 404
+      response_code         = var.override_status_code_404
+      response_page_path    = "/index.html"
+    },
+    {
+      error_caching_min_ttl = 3000
+      error_code            = 403
+      response_code         = var.override_status_code_403
+      response_page_path    = "/index.html"
+    }
+  ]
+
   origin = {
     s3_bucket = {
       domain_name               = module.s3_bucket.s3_bucket_bucket_regional_domain_name
@@ -20,6 +35,16 @@ module "cdn" {
     # TODO: tady budou dalsi dynamicky originy
     # iterovany for/for_each nad var.proxy.paths
     # a take var.oidc
+  }
+
+  origin_access_control = {
+    s3 = {
+      name             = "Access from CF to S3 - ${local.main_domain}"
+      description      = "Access from CF to S3 - ${local.main_domain}"
+      origin_type      = "s3"
+      signing_behavior = "always"
+      signing_protocol = "sigv4"
+    }
   }
 
   default_cache_behavior = {
@@ -50,30 +75,12 @@ module "cdn" {
 
   }
 
-  custom_error_response = length(var.oidc) > 0 ? [] : [
-    {
-      error_code         = 404
-      response_code      = var.override_status_code_404
-      response_page_path = "/index.html"
-    },
-    {
-      error_code         = 403
-      response_code      = var.override_status_code_403
-      response_page_path = "/index.html"
-    }
-  ]
-
   # TODO: dynamic ordered_cache_behavior 2x ruzna pro var.oidc a var.proxy_paths
-  # TODO: dynamic logging_config
 
-  origin_access_control = {
-    s3 = {
-      name             = "Access from CF to S3 - ${local.main_domain}"
-      description      = "Access from CF to S3 - ${local.main_domain}"
-      origin_type      = "s3"
-      signing_behavior = "always"
-      signing_protocol = "sigv4"
-    }
+  logging_config = var.logs_bucket_domain_name == null ? null : {
+    bucket          = var.logs_bucket_domain_name
+    prefix          = "cloudfront/access_logs/${local.main_domain_sanitized}/"
+    include_cookies = false
   }
 
   restrictions = {
