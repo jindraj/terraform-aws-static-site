@@ -1,6 +1,6 @@
 locals {
   main_domain            = var.zones_and_domains[0].domains[0]
-  main_zone_id = var.zones_and_domains[0].zone_id
+  main_zone_id           = var.zones_and_domains[0].zone_id
 
   all_domains            = distinct(flatten([ for z in var.zones_and_domains : z.domains ]))
 
@@ -44,7 +44,7 @@ module "certificate" {
   version = "6.3.0"
 
   domain_name = local.main_domain
-  zone_id     = var.main_zone_id
+  zone_id     = local.main_zone_id
 
   subject_alternative_names = local.alternative_domains
 
