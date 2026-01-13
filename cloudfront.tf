@@ -54,14 +54,12 @@ module "cdn" {
     oidc_callback = length(var.oidc) == 0 ? null : {
       domain_name = split("/", module.oidc.oidc_callback_url_base)[2]
       origin_id   = "api-gateway-origin"
-      custom_origin_config = [
-        {
-          http_port              = 80
-          https_port             = 443
-          origin_protocol_policy = "https-only"
-          origin_ssl_protocols   = ["TLSv1.2"]
-        }
-      ]
+      custom_origin_config = {
+        http_port              = 80
+        https_port             = 443
+        origin_protocol_policy = "https-only"
+        origin_ssl_protocols   = ["TLSv1.2"]
+      }
     }
     # TODO: tady budou dalsi dynamicky originy
     # iterovany for/for_each nad var.proxy.paths
