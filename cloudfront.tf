@@ -51,7 +51,7 @@ module "cdn" {
       origin_path               = var.origin_path
       origin_access_control_key = "s3"
     }
-    oidc_callback = length(var.oidc) == 0 ? {} : {
+    oidc_callback = length(var.oidc) == 0 ? null : {
       domain_name = split("/", module.oidc.oidc_callback_url_base)[2]
       origin_id   = "api-gateway-origin"
       custom_origin_config = [
