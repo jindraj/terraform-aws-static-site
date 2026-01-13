@@ -22,16 +22,16 @@ variable "s3_bucket_policy" {
   description = "Additional S3 bucket policy"
 }
 
+variable "gitlab_aws_env_vars_suffix" {
+  description = "Append suffix for Gitlab CI/CD environment variables if needed"
+  type        = string
+  default     = ""
+}
+
 variable "gitlab_project_ids" {
   description = "Integrates with GitLab CI/CD to deploy site and invalidate CloudFront cache"
   type        = list(string)
   default     = []
-}
-
-variable "gitlab_project_id" {
-  type        = string
-  description = "Deprecated: Use gitlab_project_ids instead"
-  default     = ""
 }
 
 variable "gitlab_environment" {
@@ -144,28 +144,14 @@ variable "origin_path" {
   description = "Cloudfront origin path"
 }
 
-variable "min_ttl" {
-  description = "Minimum amount of time that you want objects to stay in a CloudFront cache"
-  type        = number
-  default     = 0
-}
-
-variable "default_ttl" {
-  description = "Default amount of time that you want objects to stay in a CloudFront cache"
-  type        = number
-  default     = 3600
-}
-
-variable "max_ttl" {
-  description = "Maximum amount of time that you want objects to stay in a CloudFront cache"
-  type        = number
-  default     = 86400
-}
-
-variable "aws_env_vars_suffix" {
-  description = "Append suffix for Gitlab CI/CD environment variables if needed"
-  type        = string
-  default     = ""
+variable "cache_ttl" {
+  description = "Cache TTLs configuration for CloudFront distribition; sets minimum/maximum and default amount of time the objects stays in cache"
+  type = object({
+    min     = optional(number, 0)
+    max     = optional(number, 864000)
+    default = optional(number, 3600)
+  })
+  default = {}
 }
 
 variable "s3_cors_rule" {

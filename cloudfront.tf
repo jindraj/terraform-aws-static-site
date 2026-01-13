@@ -32,9 +32,9 @@ module "cdn" {
     target_origin_id           = var.s3_bucket_name
     response_headers_policy_id = local.custom_headers ? aws_cloudfront_response_headers_policy.this[0].id : null
     viewer_protocol_policy     = "redirect-to-https"
-    default_ttl                = var.default_ttl
-    min_ttl                    = var.min_ttl
-    max_ttl                    = var.max_ttl
+    default_ttl                = var.cache_ttl.default
+    min_ttl                    = var.cache_ttl.min
+    max_ttl                    = var.cache_ttl.max
 
     # verify?
     forwarded_values = {
@@ -60,7 +60,7 @@ module "cdn" {
   }
 
   logging_config = var.logs_bucket_domain_name == null ? null : {
-    bucket          = var.logs_bucket_domain_name
+    bucket          = var.logs_bucket_domain_name # TODO: is this supposed to be the same bucket as logs_bucket? should we read this from data instead?
     prefix          = "cloudfront/access_logs/${local.main_domain_sanitized}/"
     include_cookies = false
   }

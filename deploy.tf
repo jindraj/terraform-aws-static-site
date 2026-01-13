@@ -1,11 +1,10 @@
 locals {
-  gitlab_project_ids    = toset(concat(var.gitlab_project_ids, var.gitlab_project_id != "" ? [var.gitlab_project_id] : []))
-  first_project_web_url = length(local.gitlab_project_ids) > 0 ? data.gitlab_project.this[element(keys(data.gitlab_project.this), 0)].web_url : ""
-  gitlab_domain         = length(local.gitlab_project_ids) > 0 ? regex("https://([^/]+)/.*", local.first_project_web_url)[0] : ""
+  first_project_web_url = length(var.gitlab_project_ids) > 0 ? data.gitlab_project.this[element(keys(data.gitlab_project.this), 0)].web_url : ""
+  gitlab_domain         = length(var.gitlab_project_ids) > 0 ? regex("https://([^/]+)/.*", local.first_project_web_url)[0] : ""
 }
 
 data "gitlab_project" "this" {
-  for_each = local.gitlab_project_ids
+  for_each = toset(var.gitlab_project_ids)
   id       = each.value
 }
 
@@ -22,7 +21,7 @@ data "aws_iam_policy_document" "assume_role" {
 
     condition {
       test     = "ForAnyValue:StringLike"
-      values   = [for repo in local.gitlab_project_ids : format("project_path:%s:ref_type:*:ref:*", data.gitlab_project.this[repo].path_with_namespace)]
+      values   = [for repo in var.gitlab_project_ids : format("project_path:%s:ref_type:*:ref:*", data.gitlab_project.this[repo].path_with_namespace)]
       variable = format("%s:sub", local.gitlab_domain)
     }
 
@@ -91,48 +90,48 @@ resource "aws_iam_user_policy" "deploy" {
 }
 
 module "gitlab" {
-  count = length(local.gitlab_project_ids) == 0 ? 0 : 1
+  count = length(var.gitlab_project_ids) == 0 ? 0 : 1
 
   source = "./modules/gitlab"
 
-  gitlab_project_ids = local.gitlab_project_ids
+  gitlab_project_ids = var.gitlab_project_ids
 
   extra_gitlab_cicd_variables = concat(
     [
       {
-        key   = "AWS_S3_BUCKET${var.aws_env_vars_suffix}"
+        key   = "AWS_S3_BUCKET${var.gitlab_aws_env_vars_suffix}"
         value = module.s3_bucket.s3_bucket_id
-        gitlab_environment = var.gitlab_environment
+        environment_scope = var.gitlab_environment
       },
       {
-        key   = "AWS_DEFAULT_REGION${var.aws_env_vars_suffix}"
+        key   = "AWS_DEFAULT_REGION${var.gitlab_aws_env_vars_suffix}"
         value = data.aws_region.current.region
-        gitlab_environment = var.gitlab_environment
+        environment_scope = var.gitlab_environment
       },
       {
-        key   = "AWS_CF_DISTRIBUTION_ID${var.aws_env_vars_suffix}"
+        key   = "AWS_CF_DISTRIBUTION_ID${var.gitlab_aws_env_vars_suffix}"
         value = module.cdn.cloudfront_distribution_id
-        gitlab_environment = var.gitlab_environment
+        environment_scope = var.gitlab_environment
       },
     ],
     var.enable_deploy_role ? [
-      { # CONDITIONAL
-        key   = "AWS_ROLE_ARN${var.aws_env_vars_suffix}"
+      {
+        key   = "AWS_ROLE_ARN${var.gitlab_aws_env_vars_suffix}"
         value = aws_iam_role.deploy[0].arn
-        gitlab_environment = var.gitlab_environment
+        environment_scope = var.gitlab_environment
       }
     ] : [],
     var.enable_deploy_user ? [
-      { # CONDITIONAL
-        key   = "AWS_ACCESS_KEY_ID${var.aws_env_vars_suffix}"
+      {
+        key   = "AWS_ACCESS_KEY_ID${var.gitlab_aws_env_vars_suffix}"
         value = aws_iam_access_key.deploy[0].id
-        gitlab_environment = var.gitlab_environment
+        environment_scope = var.gitlab_environment
       },
-      { # CONDITIONAL
-        key    = "AWS_SECRET_ACCESS_KEY${var.aws_env_vars_suffix}"
+      {
+        key    = "AWS_SECRET_ACCESS_KEY${var.gitlab_aws_env_vars_suffix}"
         value  = aws_iam_access_key.deploy[0].secret
         masked = true
-        gitlab_environment = var.gitlab_environment
+        environment_scope = var.gitlab_environment
       },
     ] : [],
     var.extra_gitlab_cicd_variables
