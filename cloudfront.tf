@@ -41,6 +41,20 @@ module "cdn" {
         cache_policy_id          = aws_cloudfront_cache_policy.oidc[0].id
         origin_request_policy_id = aws_cloudfront_origin_request_policy.oidc[0].id
       }
+    ],
+    [
+      for p in var.proxy_paths : {
+        path_pattern = "${trim(p.path_prefix, "/")}/*" # safe variant: "/${trim(p.path_prefix, "/")}/*"
+
+        allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+        cached_methods   = ["GET", "HEAD", "OPTIONS"]
+        target_origin_id = p.origin_domain
+
+        viewer_protocol_policy = "redirect-to-https"
+
+        origin_request_policy_id = data.aws_cloudfront_origin_request_policy.managed_all_viewer_and_cloudfront_headers.id
+        cache_policy_id          = data.aws_cloudfront_cache_policy.managed_caching_disabled.id
+      }
     ]
   )
 
@@ -64,10 +78,21 @@ module "cdn" {
           origin_ssl_protocols   = ["TLSv1.2"]
         }
       }
+    },
+    {
+      for i, p in var.proxy_paths : "proxy_${i}" => {
+        domain_name = p.origin_domain
+        origin_id   = p.origin_domain
+        origin_path = startswith(p.path_prefix, "/") ? p.path_prefix : "/${p.path_prefix}"
+
+        custom_origin_config = {
+          http_port              = 80
+          https_port             = 443
+          origin_protocol_policy = "https-only"
+          origin_ssl_protocols   = ["TLSv1.2", "TLSv1.1"]
+        }
+      }
     }
-    # TODO: tady budou dalsi dynamicky originy
-    # iterovany for/for_each nad var.proxy.paths
-    # a take var.oidc
   )
 
   origin_access_control = {
