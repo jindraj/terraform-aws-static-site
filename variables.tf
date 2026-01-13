@@ -14,7 +14,7 @@ variable "domains" {
 
 variable "extra_domains" {
   type        = map(string)
-  description = "Map of extra_domains with domain name and zone_id"
+  description = "Deprecated! Map of extra_domains with domain name and zone_id; kept for migration to generate moved blocks"
   default     = {}
 }
 
