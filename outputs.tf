@@ -83,6 +83,13 @@ moved {
   to   = module.PLACEHOLDER.module.gitlab[0].gitlab_project_variable.this["${p}-AWS_SECRET_ACCESS_KEY"]
 }
 EOF
+      ,
+      <<EOF
+moved {
+  from = module.PLACEHOLDER.module.gitlab[0].gitlab_project_variable.site_aws_role_arn["${p}"]
+  to   = module.PLACEHOLDER.module.gitlab[0].gitlab_project_variable.this["${p}-AWS_ROLE_ARN"]
+}
+EOF
     ]
   ]))
 }
