@@ -44,27 +44,31 @@ module "cdn" {
     ]
   )
 
-  origin = {
-    s3_bucket = {
-      domain_name               = module.s3_bucket.s3_bucket_bucket_regional_domain_name
-      origin_id                 = var.s3_bucket_name
-      origin_path               = var.origin_path
-      origin_access_control_key = "s3"
-    }
-    oidc_callback = length(var.oidc) == 0 ? {} : {
-      domain_name = split("/", module.oidc.oidc_callback_url_base)[2]
-      origin_id   = "api-gateway-origin"
-      custom_origin_config = {
-        http_port              = 80
-        https_port             = 443
-        origin_protocol_policy = "https-only"
-        origin_ssl_protocols   = ["TLSv1.2"]
+  origin = merge(
+    {
+      s3_bucket = {
+        domain_name               = module.s3_bucket.s3_bucket_bucket_regional_domain_name
+        origin_id                 = var.s3_bucket_name
+        origin_path               = var.origin_path
+        origin_access_control_key = "s3"
+      }
+    },
+    length(var.oidc) == 0 ? {} : {
+      oidc_callback = {
+        domain_name = split("/", module.oidc.oidc_callback_url_base)[2]
+        origin_id   = "api-gateway-origin"
+        custom_origin_config = {
+          http_port              = 80
+          https_port             = 443
+          origin_protocol_policy = "https-only"
+          origin_ssl_protocols   = ["TLSv1.2"]
+        }
       }
     }
     # TODO: tady budou dalsi dynamicky originy
     # iterovany for/for_each nad var.proxy.paths
     # a take var.oidc
-  }
+  )
 
   origin_access_control = {
     s3 = {
