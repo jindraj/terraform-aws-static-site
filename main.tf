@@ -1,6 +1,15 @@
 locals {
-  main_domain            = one(slice(var.domains, 0, 1))
-  alternative_domains    = length(var.domains) == 1 ? [] : slice(var.domains, 1, length(var.domains))
+  main_domain            = var.zones_and_domains[0].domains[0]
+  main_zone_id = var.zones_and_domains[0].zone_id
+
+  all_domains            = distinct(flatten([ for z in var.zones_and_domains : z.domains ]))
+
+  alternative_domains    = length(local.all_domains) == 1 ? [] : slice(local.all_domains, 1, length(local.all_domains))
+  zones_by_domain = merge([
+    for z in var.zones_and_domains : {
+      for d in z.domains : d => z.zone_id
+    }
+  ]...)
   main_domain_sanitized  = replace(local.main_domain, "*.", "")
   custom_headers_present = var.custom_headers != null && var.custom_headers != {}
   custom_headers         = local.custom_headers_present || length(var.s3_cors_rule) > 0 ? true : false
@@ -32,17 +41,17 @@ module "certificate" {
   }
 
   source  = "terraform-aws-modules/acm/aws"
-  version = "6.2.0"
+  version = "6.3.0"
 
   domain_name = local.main_domain
-  zone_id     = var.domain_zone_id
+  zone_id     = var.main_zone_id
 
-  subject_alternative_names = concat(local.alternative_domains, keys(var.extra_domains))
+  subject_alternative_names = local.alternative_domains
 
   validation_method   = "DNS"
   wait_for_validation = true
 
-  zones = var.extra_domains
+  zones = local.zones_by_domain
 
   tags = local.tags
 }
@@ -273,21 +282,7 @@ resource "aws_cloudfront_origin_request_policy" "oidc" {
 }
 
 resource "aws_route53_record" "this" {
-  for_each = toset(var.domains)
-
-  zone_id = var.domain_zone_id
-  name    = each.value
-  type    = "A"
-
-  alias {
-    name                   = module.cdn.cloudfront_distribution_domain_name
-    zone_id                = module.cdn.cloudfront_distribution_hosted_zone_id
-    evaluate_target_health = false
-  }
-}
-
-resource "aws_route53_record" "extra" {
-  for_each = var.extra_domains
+  for_each = local.zones_by_domain
 
   zone_id = each.value
   name    = each.key

@@ -12,6 +12,35 @@ variable "domains" {
   }
 }
 
+variable "extra_domains" {
+  type        = map(string)
+  description = "Map of extra_domains with domain name and zone_id"
+  default     = {}
+}
+
+variable "zones_and_domains" {
+  type = list(object({
+    zone_id  = string
+    domains  = list(string)
+  }))
+
+  description = "Ordered list of Route53 zones with their domain aliases (can include wildcards). First item/first domain can be used as CloudFront default."
+
+  validation {
+    condition = (
+      length(var.zones_and_domains) >= 1
+      &&
+      alltrue([
+        for z in var.zones_and_domains :
+        length(trim(z.zone_id)) > 0
+        && length(z.domains) >= 1
+        && alltrue([for d in z.domains : length(trim(d)) > 0])
+      ])
+    )
+    error_message = "zones_and_domains must contain at least 1 zone, each zone_id must be non-empty, and each zone must have at least 1 non-empty domain."
+  }
+}
+
 variable "s3_bucket_name" {
   type = string
 }
@@ -174,12 +203,6 @@ variable "response_header_origin_override" {
 variable "response_header_access_control_allow_credentials" {
   type    = bool
   default = false
-}
-
-variable "extra_domains" {
-  type        = map(string)
-  description = "Map of extra_domains with domain name and zone_id"
-  default     = {}
 }
 
 variable "custom_headers" {

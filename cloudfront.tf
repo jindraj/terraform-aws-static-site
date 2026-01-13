@@ -1,8 +1,8 @@
 module "cdn" {
   source  = "terraform-aws-modules/cloudfront/aws"
-  version = "6.0.2"
+  version = "6.3.0"
 
-  aliases             = concat(var.domains, keys(var.extra_domains))
+  aliases             = local.all_domains
   comment             = local.main_domain
   default_root_object = "index.html"
   enabled             = true
