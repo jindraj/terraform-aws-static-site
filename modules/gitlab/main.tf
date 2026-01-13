@@ -28,5 +28,5 @@ resource "gitlab_project_variable" "this" {
   key   = each.value.key
   value = each.value.value
 
-  environment_scope = var.gitlab_environment
+  environment_scope = each.value.environment_scope
 }
