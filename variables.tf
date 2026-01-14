@@ -3,7 +3,7 @@ variable "domain_zone_id" { # Deprecated; to be removed in upcomming releases
   default     = null
   description = "Deprecated!  Use `zones_and_domains`.The ID of the hosted zone for domain"
   validation {
-    condition     = (length(var.domain_zone_id) > 0)
+    condition     = (length(var.domain_zone_id) == null)
     error_message = "The domain_zone_id input is deprecated, Please use zones_and_domains instead."
   }
 }
@@ -13,7 +13,7 @@ variable "domains" { # Deprecated; to be removed in upcomming releases
   default     = []
   description = "Deprecated! Use `zones_and_domains`. List of domain aliases. You can also specify wildcard eg.: `*.example.com`"
   validation {
-    condition     = (length(var.domains) > 0)
+    condition     = (length(var.domains) == 0)
     error_message = "The domain input is deprecated, Please use zones_and_domains instead."
   }
 }
