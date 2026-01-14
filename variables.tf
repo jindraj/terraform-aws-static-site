@@ -1,20 +1,26 @@
-variable "domain_zone_id" {
+variable "domain_zone_id" { # Deprecated; to be removed in upcomming releases
   type        = string
-  description = "The ID of the hosted zone for domain"
-}
-
-variable "domains" {
-  type        = list(string)
-  description = "List of domain aliases. You can also specify wildcard eg.: `*.example.com`"
+  default     = null
+  description = "Deprecated!  Use `zones_and_domains`.The ID of the hosted zone for domain"
   validation {
-    condition     = length(var.domains) >= 1
-    error_message = "The domains value must contain at least one domain."
+    condition     = (length(var.domain_zone_id) > 0)
+    error_message = "The domain_zone_id input is deprecated, Please use zones_and_domains instead."
   }
 }
 
-variable "extra_domains" {
+variable "domains" { # Deprecated; to be removed in upcomming releases
+  type        = list(string)
+  default     = []
+  description = "Deprecated! Use `zones_and_domains`. List of domain aliases. You can also specify wildcard eg.: `*.example.com`"
+  validation {
+    condition     = (length(var.domains) > 0)
+    error_message = "The domain input is deprecated, Please use zones_and_domains instead."
+  }
+}
+
+variable "extra_domains" { # Deprecated; to be removed in upcomming releases
   type        = map(string)
-  description = "Deprecated! Map of extra_domains with domain name and zone_id; kept for migration to generate moved blocks"
+  description = "Deprecated! Use `zones_and_domains`. Map of extra_domains with domain name and zone_id; This input can be kept initialy for moved blocks generaiton"
   default     = {}
 }
 
@@ -24,7 +30,7 @@ variable "zones_and_domains" {
     domains = list(string)
   }))
 
-  description = "Ordered list of Route53 zones with their domain aliases."
+  description = "Ordered list of Route53 with zone_id list of domain aliases."
 
   validation {
     condition = (
@@ -40,14 +46,27 @@ variable "zones_and_domains" {
     error_message = "zones_and_domains must contain at least 1 zone, each zone_id must be non-empty, and each zone must have at least 1 non-empty domain."
   }
 }
+
 variable "s3_bucket_name" {
-  type = string
+  description = "The name for the S3 bucket hosting the website"
+  type        = string
 }
 
 variable "s3_bucket_policy" {
   type        = string
   default     = "{}"
   description = "Additional S3 bucket policy"
+}
+
+variable "logs_bucket" {
+  description = "Bucket to store CloudFront logs"
+  type        = string
+  default     = null
+}
+
+variable "logs_bucket_domain_name" {
+  type    = string
+  default = null
 }
 
 variable "gitlab_aws_env_vars_suffix" {
@@ -66,17 +85,6 @@ variable "gitlab_environment" {
   description = "GitLab environment name"
   type        = string
   default     = "*"
-}
-
-variable "logs_bucket" {
-  description = "Bucket to store CloudFront logs"
-  type        = string
-  default     = null
-}
-
-variable "logs_bucket_domain_name" {
-  type    = string
-  default = null
 }
 
 variable "cloudfront_price_class" {

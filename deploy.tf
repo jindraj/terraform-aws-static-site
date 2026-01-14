@@ -99,38 +99,38 @@ module "gitlab" {
   extra_gitlab_cicd_variables = concat(
     [
       {
-        key   = "AWS_S3_BUCKET${var.gitlab_aws_env_vars_suffix}"
-        value = module.s3_bucket.s3_bucket_id
+        key               = "AWS_S3_BUCKET${var.gitlab_aws_env_vars_suffix}"
+        value             = module.s3_bucket.s3_bucket_id
         environment_scope = var.gitlab_environment
       },
       {
-        key   = "AWS_DEFAULT_REGION${var.gitlab_aws_env_vars_suffix}"
-        value = data.aws_region.current.region
+        key               = "AWS_DEFAULT_REGION${var.gitlab_aws_env_vars_suffix}"
+        value             = data.aws_region.current.region
         environment_scope = var.gitlab_environment
       },
       {
-        key   = "AWS_CF_DISTRIBUTION_ID${var.gitlab_aws_env_vars_suffix}"
-        value = module.cdn.cloudfront_distribution_id
+        key               = "AWS_CF_DISTRIBUTION_ID${var.gitlab_aws_env_vars_suffix}"
+        value             = module.cdn.cloudfront_distribution_id
         environment_scope = var.gitlab_environment
       },
     ],
     var.enable_deploy_role ? [
       {
-        key   = "AWS_ROLE_ARN${var.gitlab_aws_env_vars_suffix}"
-        value = aws_iam_role.deploy[0].arn
+        key               = "AWS_ROLE_ARN${var.gitlab_aws_env_vars_suffix}"
+        value             = aws_iam_role.deploy[0].arn
         environment_scope = var.gitlab_environment
       }
     ] : [],
     var.enable_deploy_user ? [
       {
-        key   = "AWS_ACCESS_KEY_ID${var.gitlab_aws_env_vars_suffix}"
-        value = aws_iam_access_key.deploy[0].id
+        key               = "AWS_ACCESS_KEY_ID${var.gitlab_aws_env_vars_suffix}"
+        value             = aws_iam_access_key.deploy[0].id
         environment_scope = var.gitlab_environment
       },
       {
-        key    = "AWS_SECRET_ACCESS_KEY${var.gitlab_aws_env_vars_suffix}"
-        value  = aws_iam_access_key.deploy[0].secret
-        masked = true
+        key               = "AWS_SECRET_ACCESS_KEY${var.gitlab_aws_env_vars_suffix}"
+        value             = aws_iam_access_key.deploy[0].secret
+        masked            = true
         environment_scope = var.gitlab_environment
       },
     ] : [],
