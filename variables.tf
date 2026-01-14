@@ -3,7 +3,7 @@ variable "domain_zone_id" { # Deprecated; to be removed in upcomming releases
   default     = null
   description = "Deprecated!  Use `zones_and_domains`.The ID of the hosted zone for domain"
   validation {
-    condition     = (length(var.domain_zone_id) == null)
+    condition     = (var.domain_zone_id == null)
     error_message = "The domain_zone_id input is deprecated, Please use zones_and_domains instead."
   }
 }
