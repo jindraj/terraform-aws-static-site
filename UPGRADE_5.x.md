@@ -1,7 +1,5 @@
 # Upgrade from v4.x to v5.x
 
-## project_id is 
-
 Old
 
 ```terraform
@@ -11,7 +9,7 @@ module "static-site" {
 
   domains        = ["example.com", "www.example.com"]
   domain_zone_id = data.aws_route53_zone.example_com.zone_id
-  
+
   extra_domains = {
     "example.net"     = data.aws_route53_zone.example_net.zone_id
     "www.example.net" = data.aws_route53_zone.example_net.zone_id
@@ -36,6 +34,10 @@ module "static-site" {
   source  = "cookielab/static-site/aws"
   version = "~> 5.0"
 
+  # zones_and_domains is list of objects. First item is supposed to hold
+  # the zone_id and domains defined in `domains` and `domain_zone_id` inputs
+  # of version v4.x
+  # All other items represents `extra_domains` input of version v4.x
   zones_and_domains = [
     {
       zone_id = data.aws_route53_zone.example_com.zone_id

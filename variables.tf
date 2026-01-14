@@ -22,6 +22,10 @@ variable "extra_domains" { # Deprecated; to be removed in upcomming releases
   type        = map(string)
   description = "Deprecated! Use `zones_and_domains`. Map of extra_domains with domain name and zone_id; This input can be kept initialy for moved blocks generaiton"
   default     = {}
+  validation {
+    condition     = (length(var.extra_domains) == 0)
+    error_message = "The extra_domains input is deprecated, Please use zones_and_domains instead."
+  }
 }
 
 variable "zones_and_domains" {
@@ -30,7 +34,7 @@ variable "zones_and_domains" {
     domains = list(string)
   }))
 
-  description = "Ordered list of Route53 with zone_id list of domain aliases."
+  description = "Ordered list of Route53 with zone_id list of domain aliases. The first item is used as the main domain."
 
   validation {
     condition = (

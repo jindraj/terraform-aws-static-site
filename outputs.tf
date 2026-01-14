@@ -31,10 +31,12 @@ output "oidc_callback_url" {
   value = module.oidc.oidc_callback_url_base != null ? module.oidc.oidc_callback_url_base : null
 }
 
-output "moved_blocks_aws_route53_records" { # Temporary output
+output "moved_blocks_aws_route53_records" {
   value = "Run following output through `sed 's/PLACEHOLDER/YOUR_MODULE_NAME/'` to generate moved blocks\n\n${join("\n\n",
-    [
-      for d, _ in var.extra_domains :
+  [
+      for d in flatten([
+        for i, z in var.zones_and_domains : z.domains if i > 0
+      ]) :
       <<EOF
 moved {
   from = module.PLACEHOLDER.aws_route53_record.extra["${d}"]
@@ -44,7 +46,6 @@ EOF
     ]
   )}"
 }
-
 output "moved_blocks_gitlab_project_variables" { # Temporary output
   value = "Run following output through `sed 's/PLACEHOLDER/YOUR_MODULE_NAME/'` to generate moved blocks\n\n${join("\n\n", flatten([
     for p in var.gitlab_project_ids : [
